@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="eng">
+	<head>
+		<title>"Bellman Ford Shortest Paths"</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<style type="text/css">
+			.options label {
+				font-size: 12px;
+				font-family: Arial, Helvetica, sans-serif;
+			}
+			form {
+				width: 500px;
+			}
+		</style>
+	</head>
+	<body>
+		<h3>Bellman Ford Shortest Paths</h3>
+		<div id="form">
+			<form action="http://127.0.0.1:8080/bellmanfordsp" method="post">
+				<fieldset>
+					<legend>Euclidean Graph Options</legend>
+					<div class="options">
+						<label for="vertices">Number of vertices (2-500):</label>
+						<input type="number" id="vertices" name="vertices" min="2" max="500"  required />
+						<br />
+						<label for="xstart">x start:</label>
+						<input type="number" id="xstart" name="xmin" step="0.01" required />
+						<label for="xend">x end:</label>
+						<input type="number" id="xend" name="xmax" step="0.01" required />
+						<br />
+						<label for="ystart" >y start:</label>
+						<input type="number" id="ystart" name="ymin" step="0.01" required />
+						<label for="yend">y end:</label>
+						<input type="number" id="yend" name="ymax" step="0.01" required />
+						<br />
+					</div>
+					<br />
+					<input type="submit" value="Submit" />
+				</fieldset>
+			</form>
+		</div>
+	</body>
+</html>
