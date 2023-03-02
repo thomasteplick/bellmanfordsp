@@ -646,7 +646,7 @@ func (bfsp *BellmanFordSP) plotSP() error {
 		deltaY := y2 - y1
 		stepY := deltaY / float64(ncells)
 
-		// loop to draw the edge; CSS colors the SP edge Yellow
+		// loop to draw the edge; CSS colors the SP edge Orange
 		x := x1
 		y := y1
 		for i := 0; i < ncells; i++ {
