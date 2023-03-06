@@ -23,3 +23,12 @@ Create a negative edge (weight = -1), shown in yellow
 
 Create a negative cycle by decreasing the weight (-18)
 ![BellmanFord_2](https://user-images.githubusercontent.com/117768679/223193350-acc98ef9-ed6a-420d-922f-45ab53d7321b.PNG)
+
+Another Shortest Path
+![BellmanFord_5](https://user-images.githubusercontent.com/117768679/223199517-ab282256-13ec-49e3-94b4-c26d91df1f0a.PNG)
+
+Create a negative edge (weight = -2.00), shown in yellow
+![BellmanFord_6](https://user-images.githubusercontent.com/117768679/223199782-cc040a71-c7cb-4eea-9f68-0c83e0a806fa.PNG)
+
+Create a negative cycle by decreasing the weight (-3.00)
+![BellmanFord_7](https://user-images.githubusercontent.com/117768679/223200157-181c5028-e9a2-4437-b938-9c224c0cd4bd.PNG)
