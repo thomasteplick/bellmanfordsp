@@ -21,5 +21,5 @@ Enter the shortest path vertices:  Source Vertex and Target Vertex
 Create a negative edge (weight = -1), shown in yellow
 ![BellmanFord_1](https://user-images.githubusercontent.com/117768679/223192882-b9bdf74a-b25c-4955-8354-9706a86e15fe.PNG)
 
-Create a negative cycle by decreasing the weight (-15.37)
+Create a negative cycle by decreasing the weight (-18)
 ![BellmanFord_2](https://user-images.githubusercontent.com/117768679/223193350-acc98ef9-ed6a-420d-922f-45ab53d7321b.PNG)
