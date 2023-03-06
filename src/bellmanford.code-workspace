@@ -1,5 +1,9 @@
 {
-	"folders": [],
+	"folders": [
+		{
+			"path": "../.git"
+		}
+	],
 	"launch": {
 		"version": "0.2.0",
 		"configurations": [
@@ -8,7 +12,7 @@
 			"type": "go",
 			"request": "launch",
 			"mode": "debug",
-			"program": "C:\\Users\\tteplick\\BellmanFordSP\\src\\spmain",
+			"program": "C:\\Users\\tjteplick\\BellmanFordSP\\src\\spmain",
 			"env":{},
 			"args":[]
 		}

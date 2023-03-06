@@ -5,7 +5,8 @@ Bellman Ford shortest paths finds the shortest paths (SP) between a source verte
 Negative-weight edge cycles are detected.  The edges in the cycle are displayed.
 Plot the SP showing the vertices and edges connecting the chosen source and target.
 The user enters the following data in an html form:  #vertices and  x-y Euclidean bounds.
-Euclidean graphs have no negative weights and no negative-weight cycles, so the cycle detection feature is unnecessary.
+Euclidean graphs have no negative weights and no negative-weight cycles, so the user
+can force negative-weight edge cycles by specifying the vertices and negative weight in the form.
 A random number of vertices is chosen for the connection with a random start vertex.
 The user can select the source and target vertices of the shortest path to find.  Their
 coordinates are displayed as well as their distance.
@@ -64,22 +65,27 @@ type MST []*Edge
 
 // Type to contain all the HTML template actions
 type PlotT struct {
-	Grid           []string // plotting grid
-	Status         string   // status of the plot
-	Xlabel         []string // x-axis labels
-	Ylabel         []string // y-axis labels
-	Distance       string   // Prim MST total distance (all the edges in MST)
-	Vertices       string   // number of vertices
-	Xmin           string   // x minimum endpoint in Euclidean graph
-	Xmax           string   // x maximum endpoint in Euclidean graph
-	Ymin           string   // y minimum endpoint in Euclidean graph
-	Ymax           string   // y maximum endpoint in Euclidean graph
-	StartLocation  string   // Prim MST start vertex location in x,y coordinates
-	SourceLocation string   // source vertex for bellmanford SP in x,y coordinates
-	TargetLocation string   // target or destination vertex for bellmanford SP in x,y coordinates
-	Source         string   // source vertex for bellmanford SP 0-Vertices-1
-	Target         string   // target vertex for bellmanford SP 0-Vertices-1
-	DistanceSP     string   // shortest path distance (source->target)
+	Grid             []string // plotting grid
+	Status           string   // status of the plot
+	Xlabel           []string // x-axis labels
+	Ylabel           []string // y-axis labels
+	Distance         string   // Prim MST total distance (all the edges in MST)
+	Vertices         string   // number of vertices
+	Xmin             string   // x minimum endpoint in Euclidean graph
+	Xmax             string   // x maximum endpoint in Euclidean graph
+	Ymin             string   // y minimum endpoint in Euclidean graph
+	Ymax             string   // y maximum endpoint in Euclidean graph
+	StartLocation    string   // Prim MST start vertex location in x,y coordinates
+	SourceLocation   string   // source vertex for bellmanford SP in x,y coordinates
+	TargetLocation   string   // target or destination vertex for bellmanford SP in x,y coordinates
+	Source           string   // source vertex for bellmanford SP 0-Vertices-1
+	Target           string   // target vertex for bellmanford SP 0-Vertices-1
+	DistanceSP       string   // shortest path distance (source->target)
+	NegativeEdgeFrom string   // Negative edge from vertex
+	NegativeEdgeTo   string   // Negative edge to vertex
+	NegativeWeight   string   // Negative weight < 0
+	PathSP           string   // List of vertices
+	NegDistance      string   // Negative distance for SP
 }
 
 // Type to hold the minimum and maximum data values of the Euclidean graph
@@ -101,16 +107,19 @@ type PrimMST struct {
 
 // BellmanFordSP type for Shortest Path methods
 type BellmanFordSP struct {
-	edgeTo     []*Edge      // edge to vertex w
-	distTo     []float64    // distance to w from source
-	adj        [][]*Edge    // adjacency list
-	mst        MST          // reference PrimMST
-	graph      [][]float64  // reference PrimMST
-	location   []complex128 // reference PrimMST
-	plot       *PlotT       // reference PrimMST
-	source     int          // start vertex for shortest path
-	target     int          // end vertex for shortest path
-	*Endpoints              // Euclidean graph endpoints
+	edgeTo      []*Edge      // edge to vertex w
+	distTo      []float64    // distance to w from source
+	adj         [][]*Edge    // adjacency list
+	mst         MST          // reference PrimMST
+	graph       [][]float64  // reference PrimMST
+	location    []complex128 // reference PrimMST
+	plot        *PlotT       // reference PrimMST
+	source      int          // start vertex for shortest path
+	target      int          // end vertex for shortest path
+	*Endpoints               // Euclidean graph endpoints
+	negEdgeFrom int          // negative edge from vertex
+	negEdgeTo   int          // negative edge to vertex
+	negWeight   float64      // negative edge weight < 0
 }
 
 // global variables for parse and execution of the html template and MST construction
@@ -559,7 +568,8 @@ func (bfsp *BellmanFordSP) findSP(r *http.Request) error {
 	}
 
 	// detect negative-weight cycle and return edge
-	detect := func(v int) *Edge {
+	detect := func(v int) []*Edge {
+		edges := make([]*Edge, 0)
 		for _, e := range bfsp.adj[v] {
 			// Determine v and w on the edge
 			w := e.w
@@ -571,10 +581,46 @@ func (bfsp *BellmanFordSP) findSP(r *http.Request) error {
 			// if distance decreases, this indicates a negative-weight cycle
 			newDistance := bfsp.distTo[v] + bfsp.graph[v][w]
 			if bfsp.distTo[w] > newDistance {
-				return e
+				edges = append(edges, e)
 			}
 		}
-		return nil
+		return edges
+	}
+
+	// Insert the negative-weight if the HTML form controls are set
+	negEdgeFrom := r.PostFormValue("negedgefrom")
+	negEdgeTo := r.PostFormValue("negedgeto")
+	negWeight := r.PostFormValue("negweight")
+	if len(negEdgeFrom) > 0 && len(negEdgeTo) > 0 && len(negWeight) > 0 &&
+		negEdgeFrom != "0" && negEdgeTo != "0" && negWeight != "0.00" {
+		bfsp.negEdgeFrom, err = strconv.Atoi(negEdgeFrom)
+		if err != nil {
+			fmt.Printf("negative-edge from Atoi error: %v\n", err)
+			return err
+		}
+		bfsp.negEdgeTo, err = strconv.Atoi(negEdgeTo)
+		if err != nil {
+			fmt.Printf("negative-edge to Atoi error: %v\n", err)
+			return err
+		}
+		bfsp.negWeight, err = strconv.ParseFloat(negWeight, 64)
+		if err != nil {
+			fmt.Printf("negative weight ParseFloat error: %v\n", err)
+			return err
+		}
+
+		if bfsp.negEdgeFrom == bfsp.negEdgeTo || bfsp.negEdgeFrom < 0 || bfsp.negEdgeTo < 0 ||
+			bfsp.negEdgeFrom > vertices-1 || bfsp.negEdgeTo > vertices-1 {
+			return fmt.Errorf("negative-edge from/to vertices are invalid")
+		}
+		if bfsp.negWeight >= 0 {
+			return fmt.Errorf("negative-edge weight must be less than zero")
+		}
+
+		edge := &Edge{v: bfsp.negEdgeFrom, w: bfsp.negEdgeTo}
+		bfsp.adj[bfsp.negEdgeFrom] = append(bfsp.adj[bfsp.negEdgeFrom], edge)
+		bfsp.graph[bfsp.negEdgeFrom][bfsp.negEdgeTo] = bfsp.negWeight
+
 	}
 
 	// Perform the number of vertices minus one passes over all the vertices
@@ -588,9 +634,9 @@ func (bfsp *BellmanFordSP) findSP(r *http.Request) error {
 	// Detect negative-weight cycle that is reachable from the source vertex
 	cycles := make([]*Edge, 0)
 	for v := 0; v < vertices; v++ {
-		edge := detect(v)
-		if edge != nil {
-			cycles = append(cycles, edge)
+		edges := detect(v)
+		if len(edges) > 0 {
+			cycles = append(cycles, edges...)
 		}
 	}
 	// convert edges to error
@@ -605,7 +651,8 @@ func (bfsp *BellmanFordSP) findSP(r *http.Request) error {
 	return nil
 }
 
-// plotSP draws the shortest path from source to target in the grid
+// plotSP draws the shortest path from source to target in the grid and any
+// edges in negative-weight cycles
 func (bfsp *BellmanFordSP) plotSP() error {
 	// check if the target was found in findSP
 	if len(bfsp.distTo) == 0 || bfsp.distTo[bfsp.target] == math.MaxFloat64 {
@@ -613,8 +660,8 @@ func (bfsp *BellmanFordSP) plotSP() error {
 	}
 
 	var (
-		distance  float64 = 0.0
-		firstEdge *Edge
+		distance float64 = 0.0
+		edges    []*Edge = make([]*Edge, 0)
 	)
 
 	// Calculate scale factors for x and y
@@ -626,10 +673,17 @@ func (bfsp *BellmanFordSP) plotSP() error {
 	lenEP := cmplx.Abs(endEP - beginEP)      // length of the Euclidean graph
 
 	e := bfsp.edgeTo[bfsp.target]
+	if e.w != bfsp.target {
+		e.v, e.w = e.w, e.v
+	}
 	// start at the target and loop until source vertex is plotted to the grid
+	nedges := 0
 	for {
 		v := e.v
 		w := e.w
+
+		edges = append(edges, e)
+
 		start := bfsp.location[v]
 		end := bfsp.location[w]
 		x1 := real(start)
@@ -637,7 +691,7 @@ func (bfsp *BellmanFordSP) plotSP() error {
 		x2 := real(end)
 		y2 := imag(end)
 		lenEdge := cmplx.Abs(end - start)
-		distance += lenEdge
+		distance += bfsp.graph[v][w]
 		ncells := int(columns * lenEdge / lenEP) // number of points to plot in the edge
 
 		deltaX := x2 - x1
@@ -646,7 +700,7 @@ func (bfsp *BellmanFordSP) plotSP() error {
 		deltaY := y2 - y1
 		stepY := deltaY / float64(ncells)
 
-		// loop to draw the edge; CSS colors the SP edge Orange
+		// loop to draw the SP edge; CSS colors the edge Orange
 		x := x1
 		y := y1
 		for i := 0; i < ncells; i++ {
@@ -667,9 +721,13 @@ func (bfsp *BellmanFordSP) plotSP() error {
 		col = int((x2-bfsp.xmin)*xscale + .5)
 		bfsp.plot.Grid[row*columns+col] = "vertex"
 
-		// exit the loop if source is reached, we have the SP
-		if e.v == bfsp.source {
-			firstEdge = e
+		vertices := len(bfsp.location)
+		nedges++
+
+		// Exit the loop if source is reached, we have the SP.
+		// Or an infinite loop, stop after the number of vertices
+		// in the graph is acquired.
+		if e.v == bfsp.source || nedges == vertices-1 {
 			break
 		}
 
@@ -680,10 +738,39 @@ func (bfsp *BellmanFordSP) plotSP() error {
 		}
 	}
 
+	// Draw the negative-weight edge
+	v := bfsp.negEdgeFrom
+	w := bfsp.negEdgeTo
+	start := bfsp.location[v]
+	end := bfsp.location[w]
+	x1 := real(start)
+	y1 := imag(start)
+	x2 := real(end)
+	y2 := imag(end)
+	lenEdge := cmplx.Abs(end - start)
+	ncells := int(columns * lenEdge / lenEP) // number of points to plot in the edge
+
+	deltaX := x2 - x1
+	stepX := deltaX / float64(ncells)
+
+	deltaY := y2 - y1
+	stepY := deltaY / float64(ncells)
+
+	// loop to draw the edge; CSS colors the cycle edge Yellow
+	x := x1
+	y := y1
+	for i := 0; i < ncells; i++ {
+		row := int((bfsp.ymax-y)*yscale + .5)
+		col := int((x-bfsp.xmin)*xscale + .5)
+		bfsp.plot.Grid[row*columns+col] = "edgeCycle"
+		x += stepX
+		y += stepY
+	}
+
 	// Mark the end vertices of the shortest path
 	e = bfsp.edgeTo[bfsp.target]
-	x := real(bfsp.location[e.w])
-	y := imag(bfsp.location[e.w])
+	x = real(bfsp.location[e.w])
+	y = imag(bfsp.location[e.w])
 	// Mark the SP end vertex.  CSS colors the vertex Red.
 	row := int((bfsp.ymax-y)*yscale + .5)
 	col := int((x-bfsp.xmin)*xscale + .5)
@@ -697,8 +784,8 @@ func (bfsp *BellmanFordSP) plotSP() error {
 	bfsp.plot.Target = strconv.Itoa(e.w)
 
 	// Mark the SP start vertex.  CSS colors the vertex Blue.
-	x = real(bfsp.location[firstEdge.v])
-	y = imag(bfsp.location[firstEdge.v])
+	x = real(bfsp.location[bfsp.source])
+	y = imag(bfsp.location[bfsp.source])
 	row = int((bfsp.ymax-y)*yscale + .5)
 	col = int((x-bfsp.xmin)*xscale + .5)
 	bfsp.plot.Grid[row*columns+col] = "vertexSP1"
@@ -708,10 +795,28 @@ func (bfsp *BellmanFordSP) plotSP() error {
 	bfsp.plot.Grid[row*columns+col-1] = "vertexSP1"
 
 	bfsp.plot.SourceLocation = fmt.Sprintf("(%.2f, %.2f)", x, y)
-	bfsp.plot.Source = strconv.Itoa(firstEdge.v)
+	bfsp.plot.Source = strconv.Itoa(bfsp.source)
 
 	// Distance of the SP
 	bfsp.plot.DistanceSP = fmt.Sprintf("%.2f", distance)
+	if distance < 0.0 {
+		bfsp.plot.NegDistance = "negativedistance"
+	}
+
+	// Negative-edge vertices and weight
+	bfsp.plot.NegativeEdgeFrom = strconv.Itoa(bfsp.negEdgeFrom)
+	bfsp.plot.NegativeEdgeTo = strconv.Itoa(bfsp.negEdgeTo)
+	bfsp.plot.NegativeWeight = fmt.Sprintf("%.2f", bfsp.negWeight)
+
+	// list of vertices on the Shortest Path
+	n := len(edges)
+	verts := make([]string, n+1)
+	for i := 0; i < n; i++ {
+		verts[n-i] = strconv.Itoa(edges[i].w)
+	}
+	verts[0] = strconv.Itoa(edges[n-1].v)
+
+	bfsp.plot.PathSP = strings.Join(verts, ", ")
 
 	return nil
 

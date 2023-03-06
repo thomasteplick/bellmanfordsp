@@ -94,6 +94,9 @@
 			div.grid > div.edgeSP {
 				background-color: orange;
 			}
+			div.grid > div.edgeCycle {
+				background-color: yellow;
+			}
 			.vertexSP1 {
 				color: blue;
 			}
@@ -115,6 +118,12 @@
 			#form {
 				margin-left: 10px;
 				width: 500px;
+			}
+			.negativeedge {
+				color: yellow;
+			}
+			.negativedistance {
+				background-color: red;
 			}
 
 		</style>
@@ -172,12 +181,24 @@
 							<label for="targetlocation">Target Location:</label>
 							<input type="text" id="targetlocation" name="targetlocation" class="vertexSP2" value="{{.TargetLocation}}" readonly />
 							<br />
+							<label for="pathsp">Shortest Path Vertices:</label>
+							<textarea id="pathsp" name="pathsp" cols="100" readonly>{{.PathSP}}</textarea>
+							<br />
 							<label for="distanceSP">SP Distance:</label>
-							<input type="text" id="distanceSP" name="distanceSP" value="{{.DistanceSP}}" readonly />
+							<input type="text" id="distanceSP" name="distanceSP" class="{{.NegDistance}}" value="{{.DistanceSP}}" readonly />
+							<br />
+							<label for="negedgefrom">Negative-edge from:</label>
+							<input type ="text" id="negedgefrom" class="negativeedge" name="negedgefrom" value="{{.NegativeEdgeFrom}}" />
+							<label for="negedgeto">Negative-edge to:</label>
+							<input type="text" id="negedgeto" class="negativeedge" name="negedgeto" value="{{.NegativeEdgeTo}}" />
+							<br />
+							<label for="negweight">Negative weight:</label>
+							<input type="text" id="negweight" name="negweight" value="{{.NegativeWeight}}" />
+							<br />
 						</div>
 						<br />
 						<input type="submit" value="Submit" />
-						<input type="text" size="100px" name="status" value="{{.Status}}" readonly />
+						<textarea name="status" cols="100" readonly>{{.Status}}</textarea>
 					</fieldset>
 				</form>
 			</div>
