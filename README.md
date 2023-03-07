@@ -1,5 +1,5 @@
 # bellmanfordsp
-Bellman Ford algorithm to find the shortest path with negative-weight cycle detection
+Bellman Ford algorithm to find the shortest path in a digraph with negative-weight cycle detection
 This is a web application written in Go and which uses the standard library package html/template to create the dynamic html for the web browser.
 To use this program start the program with "go run sp.go", which starts the http server listening on localhost:8080.  Open a web browser and
 address it to http://127.0.0.1:8080/graphoptions.  The user can select 2-500 vertices to create a randomly generated Euclidean graph in
